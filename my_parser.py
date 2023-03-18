@@ -25,8 +25,15 @@ class my_parser:
     # main entry point
     def program(self):
         return { 'type': 'Program', 
-                  'body': self.numeric_literal() }
+                  'body': self.literal() }
     
+
+    # Literal
+    def literal(self):
+        if (self._lookahead['type'] == 'NUMBER'): return self.numeric_literal()
+        elif (self._lookahead['type'] == 'STRING'): return self.string_literal()
+        else: raise ValueError("Error: Unexpected Literal")
+
 
     # Numeric Literal
     def numeric_literal(self):
@@ -34,6 +41,13 @@ class my_parser:
         return {'type': 'NumericLiteral',
                  'value': int(token['value']) }
     
+
+    # String Literal
+    def string_literal(self):
+        token = self._eat('STRING')
+        return {'type': 'StringLiteral',
+                 'value': token['value'][1:-1] }
+
 
     # Expects a token of given type
     def _eat(self, tokentype):
