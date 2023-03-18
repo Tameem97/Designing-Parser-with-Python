@@ -25,7 +25,7 @@ class my_parser:
     # main entry point
     def program(self):
         return { 'type': 'Program', 
-                  'body': self.literal() }
+                  'body': self.statement_list() }
     
 
     # Literal
@@ -47,6 +47,48 @@ class my_parser:
         token = self._eat('STRING')
         return {'type': 'StringLiteral',
                  'value': token['value'][1:-1] }
+
+
+    def statement_list(self, stopLookahead =None):
+        _statement_list = [self.statement()]
+
+        while (self._lookahead != None and self._lookahead["type"] != stopLookahead):
+            _statement_list.append(self.statement())
+
+        return _statement_list
+
+
+    def statement(self):
+        if (self._lookahead.get("type") == "{" ):
+            return self.block_statement()
+        
+        if (self._lookahead.get("type") == ";" ):
+            return self.empty_statement()
+        
+        return self.expression_statement()
+
+
+    def expression_statement(self):
+        _expression = self.expression()
+        self._eat(';')
+        return {"type": 'ExpressionStatement', "expression":_expression}
+    
+
+    def block_statement(self):
+        self._eat("{")
+        body = [] if self._lookahead["type"]  == "}" else self.StatementList('}')
+        self._eat("}")
+        return {"type": "BlockStatement", "body": body}
+
+
+    def empty_statement(self):
+        self._eat(";")
+        return {"type": "EmptyStatement"}
+
+
+    def expression(self):
+        return self.literal()
+
 
 
     # Expects a token of given type
