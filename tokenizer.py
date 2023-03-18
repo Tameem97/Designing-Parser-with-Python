@@ -1,8 +1,28 @@
 import re
 
 
+# Tokens Specifications
 spec = [ 
-    [r"^\d+", "NUMBER"]
+    # Numbers
+    [r"^\d+", "NUMBER"],
+
+    # Strings
+    [r"\"[^\"]*\"", "STRING"],
+    [r"\'[^\"]*\'", "STRING"],
+
+    # White Spaces
+    [r"^\s+", None],
+
+    # Single Line Comments
+    [r"^//.*", None],
+
+    # Multi-Line Comments
+    [r"^/\*[\s\S]*?\*/", None],
+
+    # Symbols
+    [r"^;", ";"],
+    [r"^{", "{"],
+    [r"^}", "}"]
 ]
 
 
@@ -13,6 +33,7 @@ class Tokenizer:
         self._cursor = 0;
 
 
+    # Initializer Method
     def init(self, string):
         self._string = string
         self._cursor = 0;
@@ -33,7 +54,7 @@ class Tokenizer:
 
             return {"type": i[1], "value": tokenValue}
 
-        raise ValueError("Unexpected Token")
+        raise ValueError(f"Unexpected Token: {i[0]}")
         
 
     # Check if there are tokens remaining or not
