@@ -11,18 +11,17 @@ rParser = my_parser()
 mode = None
 print_ast = False
 raw_string = ""
+_dir = os.listdir("./Tests")
+
 
 if "--t" in sys.argv: mode = "-test"
 if "--p" in sys.argv: print_ast = True
-print(sys.argv)
-if ("--t" not in sys.argv and len(sys.argv)==2): mode = "-file"
+if ("--t" not in sys.argv and len(sys.argv)>=2): mode = "-file"
 
 
 if (mode=='-test'):
     # Run Tests in the directory
-    dir = os.listdir("./Tests")
-
-    for i in dir:
+    for i in _dir:
         read_file = open("./Tests/"+i, "r")
 
         print("\nRunning Test: ", "Tests/"+i)   
@@ -30,16 +29,15 @@ if (mode=='-test'):
 
         if (print_ast): print(dumps(parse_ast, indent=2))
 
-        #print(a.parse(b))
         read_file.close()
         
-    print("\nAll Tests Passed...\nTotal Tests:", len(dir))
+    print("\nAll Tests Passed...\nTotal Tests:", len(_dir))
 
 elif (mode == "-file"):
     # Execute the file
-    read_file = open(sys.argv[1], "r")
+    read_file = open(sys.argv[-1], "r")
     parse_ast = rParser.parse(read_file.read())
-    print(dumps(parse_ast, indent=2))
+    if (print_ast): print(dumps(parse_ast, indent=2))
     read_file.close()
 
 else:
