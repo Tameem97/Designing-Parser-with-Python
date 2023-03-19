@@ -19,6 +19,11 @@ spec = [
     # Multi-Line Comments
     [r"^/\*[\s\S]*?\*/", None],
 
+    # Binary Operators
+    [r"^[+\-]", "ADDITIVE_OPERATOR"],
+    [r"^[*\/]", "ADDITIVE_OPERATOR"],
+
+
     # Symbols
     [r"^;", ";"],
     [r"^{", "{"],
