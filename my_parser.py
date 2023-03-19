@@ -49,6 +49,7 @@ class my_parser:
                  'value': token['value'][1:-1] }
 
 
+    # Statement List
     def statement_list(self, stopLookahead =None):
         _statement_list = [self.statement()]
 
@@ -58,6 +59,7 @@ class my_parser:
         return _statement_list
 
 
+    # Statement
     def statement(self):
         if (self._lookahead.get("type") == "{" ):
             return self.block_statement()
@@ -68,27 +70,44 @@ class my_parser:
         return self.expression_statement()
 
 
+    # Expression Statement
     def expression_statement(self):
         _expression = self.expression()
         self._eat(';')
         return {"type": 'ExpressionStatement', "expression":_expression}
     
 
+    # Block Statement
     def block_statement(self):
         self._eat("{")
-        body = [] if self._lookahead["type"]  == "}" else self.StatementList('}')
+        body = [] if self._lookahead["type"]  == "}" else self.statement_list('}')
         self._eat("}")
         return {"type": "BlockStatement", "body": body}
 
 
+    # Empty Statement
     def empty_statement(self):
         self._eat(";")
         return {"type": "EmptyStatement"}
 
 
+    # Expression
     def expression(self):
-        return self.literal()
+        return self.additive_expression()
+    
 
+    # Operator Expression
+    def additive_expression(self):
+        left = self.literal()
+
+        while (self._lookahead['type'] == 'ADDITIVE_OPERATOR'):
+            # Operators
+            operator = self._eat('ADDITIVE_OPERATOR')['value']
+            right = self.literal()
+            left = {'type': 'BinaryExpression',
+                    'operator': operator, 'left': left, 'right': right}
+            
+        return left
 
 
     # Expects a token of given type
