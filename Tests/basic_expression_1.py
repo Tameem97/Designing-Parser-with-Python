@@ -1,0 +1,2 @@
+// Integer Literal
+42;
