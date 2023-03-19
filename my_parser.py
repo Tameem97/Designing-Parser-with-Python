@@ -96,18 +96,46 @@ class my_parser:
         return self.additive_expression()
     
 
-    # Operator Expression
+    # Additive Expression
     def additive_expression(self):
-        left = self.literal()
+        left = self.multiplicative_expression()
 
         while (self._lookahead['type'] == 'ADDITIVE_OPERATOR'):
             # Operators
             operator = self._eat('ADDITIVE_OPERATOR')['value']
-            right = self.literal()
+            right = self.multiplicative_expression()
             left = {'type': 'BinaryExpression',
                     'operator': operator, 'left': left, 'right': right}
             
         return left
+
+
+    # Multiplicative Expression
+    def multiplicative_expression(self):
+        left = self.primary_expression()
+
+        while (self._lookahead['type'] == 'MULTILPICATIVE_OPERATOR'):
+            # Operators
+            operator = self._eat('MULTILPICATIVE_OPERATOR')['value']
+            right = self.primary_expression()
+            left = {'type': 'BinaryExpression',
+                    'operator': operator, 'left': left, 'right': right}
+            
+        return left
+
+
+    # Primary Expression
+    def primary_expression(self):
+        if (self._lookahead['type'] == '('): return self.parenthesized_expression()
+        else: return self.literal()
+
+
+    # Parenthesized Expression
+    def parenthesized_expression(self):
+        self._eat('(')
+        _expression = self.expression()
+        self._eat(')')
+        return _expression
 
 
     # Expects a token of given type
