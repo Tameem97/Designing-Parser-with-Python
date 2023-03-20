@@ -93,8 +93,51 @@ class my_parser:
 
     # Expression
     def expression(self):
-        return self.additive_expression()
+        return self.assignment_expression()
     
+
+    # Assignment Expression
+    def assignment_expression(self):
+        left = self.additive_expression()
+
+        if (not self._is_assignment_operator(self._lookahead['type'])): return left
+
+        left = self._check_valid_asignment_target(left)
+
+        return {'type': 'AssignmentExpression', 'operator': self.assignment_operator()['value'],
+                'left':left,
+                'right': self.assignment_expression()}
+
+
+    # Assignment Operator
+    def assignment_operator(self):
+        if (self._lookahead['type'] == 'SIMPLE_ASSIGN'): return self._eat('SIMPLE_ASSIGN')
+        else: return self._eat('COMPLEX_ASSIGN')
+
+
+    # Assignment Operator Check
+    def _is_assignment_operator(self, tokenType):
+        return tokenType == 'SIMPLE_ASSIGN' or tokenType == 'COMPLEX_ASSIGN'
+
+
+    # Left Hand Side Expression
+    def left_hand_side_expression(self):
+        return self.identifer()
+
+
+    # Identifer
+    def identifer(self):
+        name = self._eat('IDENTIFIER')['value']
+        return {'type': 'Identifer',
+                'name': name}
+
+
+    # Valid Assignment Check
+    def _check_valid_asignment_target(self, node):
+        if (node['type']=='Identifer'): return node
+
+        raise SyntaxError('Invalid left hand assignment expression')
+
 
     # Additive Expression
     def additive_expression(self):
@@ -108,8 +151,9 @@ class my_parser:
 
     # Primary Expression
     def primary_expression(self):
+        if (self._is_literal(self._lookahead['type'])): return self.literal()
         if (self._lookahead['type'] == '('): return self.parenthesized_expression()
-        else: return self.literal()
+        else: return self.left_hand_side_expression()
 
 
     # Parenthesized Expression
@@ -118,6 +162,11 @@ class my_parser:
         _expression = self.expression()
         self._eat(')')
         return _expression
+
+
+    # Check literal
+    def _is_literal(self, tokenType):
+        return tokenType == 'NUMBER' or tokenType == 'STRING' 
 
 
     # Generic Binary Expression
@@ -134,8 +183,6 @@ class my_parser:
         return left
 
 
-
-
     # Expects a token of given type
     def _eat(self, tokentype):
         token = self._lookahead
@@ -144,7 +191,7 @@ class my_parser:
             raise ValueError("Unexpected end of input")
 
         if (token["type"] != tokentype):
-            raise ValueError("Unexpected Token")
+            raise ValueError(f"Unexpected Token: {tokentype} whereas expected {token['type']}")
 
         self._lookahead = self._tokenizer.getNextToken()
 
