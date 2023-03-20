@@ -23,13 +23,25 @@ spec = [
     [r"^[+\-]", "ADDITIVE_OPERATOR"],
     [r"^[*\/]", "ADDITIVE_OPERATOR"],
 
+    # Keywords
+    [r"^\blet\b", "let"],
+    [r"^\bif\b", "if"],
+    [r"^\belse\b", "else"],
+
+    # Identifiers
+    [r"^\w+", "IDENTIFIER"],
+
+    # Assignment Operators
+    [r"^=", "SIMPLE_ASSIGN"],
+    [r"^[\*\/\+\-]=", "COMPLEX_ASSIGN"],
 
     # Symbols
-    [r"^;", ";"],
+    [r"^\;", ";"],
     [r"^\{", "{"],
     [r"^\}", "}"],
     [r"^\(", "("],
-    [r"^\)", ")"]
+    [r"^\)", ")"],
+    [r"^\,", ","]
 ]
 
 
