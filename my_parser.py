@@ -4,7 +4,7 @@ from tokenizer import Tokenizer
 # Recursive Decent Parser
 class my_parser:
     def __init__(self) -> None:
-        self._string = ""
+        self._string = ''
         self._tokenizer = Tokenizer()
         self._lookahead = None
 
@@ -32,7 +32,7 @@ class my_parser:
     def literal(self):
         if (self._lookahead['type'] == 'NUMBER'): return self.numeric_literal()
         elif (self._lookahead['type'] == 'STRING'): return self.string_literal()
-        else: raise ValueError("Error: Unexpected Literal")
+        else: raise ValueError('Error: Unexpected Literal')
 
 
     # Numeric Literal
@@ -53,7 +53,7 @@ class my_parser:
     def statement_list(self, stopLookahead =None):
         _statement_list = [self.statement()]
 
-        while (self._lookahead != None and self._lookahead["type"] != stopLookahead):
+        while (self._lookahead != None and self._lookahead['type'] != stopLookahead):
             _statement_list.append(self.statement())
 
         return _statement_list
@@ -61,34 +61,67 @@ class my_parser:
 
     # Statement
     def statement(self):
-        if (self._lookahead.get("type") == "{" ):
-            return self.block_statement()
-        
-        if (self._lookahead.get("type") == ";" ):
+        if (self._lookahead.get('type') == ';' ):
             return self.empty_statement()
-        
+        elif (self._lookahead.get('type') == '{' ):
+            return self.block_statement()
+        elif (self._lookahead.get('type') == 'let' ):
+            return self.variable_statement()
+
         return self.expression_statement()
+
+
+    # Variable Statement
+    def variable_statement(self):
+        self._eat('let')
+        declarations = self.variable_declaration_list()
+        self._eat(';')
+        return { 'type': 'VariableStatement', 'declarations':declarations}
+
+
+    # Variable Declaratiuon List
+    def variable_declaration_list(self):
+        declarations = []
+        declarations.append(self.variable_declaration())
+
+        while (self._lookahead['type'] == ','):
+            self._eat(',')
+            declarations.append(self.variable_declaration())
+
+        return declarations
+
+
+    # Variable Declaration
+    def variable_declaration(self):
+        id = self.identifer()
+        init = self.variable_initializer() if self._lookahead['type'] != ';' and self._lookahead['type'] != ',' else None
+        return {'type': 'VariableDeclaration', 'id':id, 'init':init}
+
+
+    def variable_initializer(self):
+        self._eat('SIMPLE_ASSIGN')
+        return self.assignment_expression()
 
 
     # Expression Statement
     def expression_statement(self):
         _expression = self.expression()
         self._eat(';')
-        return {"type": 'ExpressionStatement', "expression":_expression}
+        return {'type': 'ExpressionStatement', 'expression':_expression}
     
 
     # Block Statement
     def block_statement(self):
-        self._eat("{")
-        body = [] if self._lookahead["type"]  == "}" else self.statement_list('}')
-        self._eat("}")
-        return {"type": "BlockStatement", "body": body}
+        self._eat('{')
+        body = [] if self._lookahead['type']  == '}' else self.statement_list('}')
+        self._eat('}')
+        return {'type': 'BlockStatement', 'body': body}
 
 
     # Empty Statement
     def empty_statement(self):
-        self._eat(";")
-        return {"type": "EmptyStatement"}
+        self._eat(';')
+        return {'type': 'EmptyStatement'}
 
 
     # Expression
@@ -188,9 +221,9 @@ class my_parser:
         token = self._lookahead
 
         if (token == None):
-            raise ValueError("Unexpected end of input")
+            raise ValueError('Unexpected end of input')
 
-        if (token["type"] != tokentype):
+        if (token['type'] != tokentype):
             raise ValueError(f"Unexpected Token: {tokentype} whereas expected {token['type']}")
 
         self._lookahead = self._tokenizer.getNextToken()
