@@ -19,6 +19,9 @@ spec = [
     # Multi-Line Comments
     [r"^/\*[\s\S]*?\*/", None],
 
+    # Equality Operator
+    [r"^[=!]=", "EQUALITY_OPERATOR"],
+
     # Binary Operators
     [r"^[+\-]", "ADDITIVE_OPERATOR"],
     [r"^[*\/]", "ADDITIVE_OPERATOR"],
@@ -27,13 +30,24 @@ spec = [
     [r"^\blet\b", "let"],
     [r"^\bif\b", "if"],
     [r"^\belse\b", "else"],
+    [r"^\bTrue\b", "True"],
+    [r"^\bFalse\b", "False"],
+    [r"^\bNone\b", "None"],
 
     # Identifiers
     [r"^\w+", "IDENTIFIER"],
 
     # Assignment Operators
     [r"^=", "SIMPLE_ASSIGN"],
+
+    # Operators
     [r"^[\*\/\+\-]=", "COMPLEX_ASSIGN"],
+    [r"^[><]=?", "RELATIONAL_OPERATOR"],
+
+    # logical operators
+    [r"^\|\|", "LOGICAL_AND"],
+    [r"^&&", "LOGICAL_OR"],
+    [r"^!", "LOGICAL_NOT"],
 
     # Symbols
     [r"^\;", ";"],
