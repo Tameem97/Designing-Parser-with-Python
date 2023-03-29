@@ -1,6 +1,6 @@
 let x=42;
 
-if (x) {
+if (x > 1) {
     x=0;
 }
 else {

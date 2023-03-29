@@ -2,7 +2,6 @@ let x=42;
 
 if (x) {
     x=0;
-}
-else {
-    x = 1;
-}
+};
+
+if (x) if (y) {} else {};
