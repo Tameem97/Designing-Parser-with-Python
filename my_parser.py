@@ -32,6 +32,9 @@ class my_parser:
     def literal(self):
         if (self._lookahead['type'] == 'NUMBER'): return self.numeric_literal()
         elif (self._lookahead['type'] == 'STRING'): return self.string_literal()
+        elif (self._lookahead['type'] == 'True'): return self.boolean_literal(True)
+        elif (self._lookahead['type'] == 'False'): return self.boolean_literal(False)
+        elif (self._lookahead['type'] == 'None'): return self.null_literal()
         else: raise ValueError('Error: Unexpected Literal')
 
 
@@ -49,6 +52,19 @@ class my_parser:
                  'value': token['value'][1:-1] }
 
 
+    # Boolean Literal
+    def boolean_literal(self, value):
+        if value: self._eat('True')
+        else: self._eat('False')
+        return {'type': 'BooleanLiteral', 'value': value}
+    
+
+    # Null Literal
+    def null_literal(self):
+        self._eat('None')
+        return {'type': 'NullLiteral', 'value': None}
+
+
     # Statement List
     def statement_list(self, stopLookahead =None):
         _statement_list = [self.statement()]
@@ -63,12 +79,32 @@ class my_parser:
     def statement(self):
         if (self._lookahead.get('type') == ';' ):
             return self.empty_statement()
+        elif (self._lookahead.get('type') == 'if' ):
+            return self.if_statement()
         elif (self._lookahead.get('type') == '{' ):
             return self.block_statement()
         elif (self._lookahead.get('type') == 'let' ):
             return self.variable_statement()
 
         return self.expression_statement()
+
+
+    # IF-ELSE Expression
+    def if_statement(self):
+        self._eat('if')
+        self._eat('(')
+        test = self.expression()
+        self._eat(')')
+
+        consequent = self.statement()
+        alternate = None
+        if (self._lookahead != None and self._lookahead.get('type') == 'else'):
+            self._eat('else')
+            alternate = self.statement()
+
+        return {
+            'type': 'IfStatement', 'test': test, 'consequent': consequent, 'alternate': alternate
+        } 
 
 
     # Variable Statement
@@ -131,7 +167,7 @@ class my_parser:
 
     # Assignment Expression
     def assignment_expression(self):
-        left = self.additive_expression()
+        left = self.logical_or_expression()
 
         if (not self._is_assignment_operator(self._lookahead['type'])): return left
 
@@ -146,6 +182,26 @@ class my_parser:
     def assignment_operator(self):
         if (self._lookahead['type'] == 'SIMPLE_ASSIGN'): return self._eat('SIMPLE_ASSIGN')
         else: return self._eat('COMPLEX_ASSIGN')
+
+
+    # Logical And Expression
+    def logical_and_expression(self): 
+        return self._logical_expression('equality_expression',  'LOGICAL_AND')
+
+
+    # Logical OR Expression
+    def logical_or_expression(self): 
+        return self._logical_expression('logical_and_expression',  'LOGICAL_OR')
+
+
+    # Equality Expression
+    def equality_expression(self):
+        return self._binary_expression('relational_expression',  'EQUALITY_OPERATOR')
+
+
+    # Relational Expression
+    def relational_expression(self): 
+        return self._binary_expression('additive_expression',  'RELATIONAL_OPERATOR')
 
 
     # Assignment Operator Check
@@ -199,7 +255,7 @@ class my_parser:
 
     # Check literal
     def _is_literal(self, tokenType):
-        return tokenType == 'NUMBER' or tokenType == 'STRING' 
+        return tokenType == 'NUMBER' or tokenType == 'STRING' or tokenType == 'True' or tokenType == 'False' or tokenType == 'None'
 
 
     # Generic Binary Expression
@@ -211,6 +267,20 @@ class my_parser:
             operator = self._eat(operatorToken)['value']
             right = getattr(self, builder_name)()
             left = {'type': 'BinaryExpression',
+                    'operator': operator, 'left': left, 'right': right}
+            
+        return left
+
+
+    # Generic Logical Expression
+    def _logical_expression(self, builder_name, operatorToken):
+        left = getattr(self, builder_name)()
+
+        while (self._lookahead['type'] == operatorToken):
+            # Operators
+            operator = self._eat(operatorToken)['value']
+            right = getattr(self, builder_name)()
+            left = {'type': 'LogicalExpression',
                     'operator': operator, 'left': left, 'right': right}
             
         return left
