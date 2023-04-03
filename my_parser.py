@@ -211,7 +211,7 @@ class my_parser:
 
     # Left Hand Side Expression
     def left_hand_side_expression(self):
-        return self.identifer()
+        return self.primary_expression()
 
 
     # Identifer
@@ -235,15 +235,19 @@ class my_parser:
 
     # Multiplicative Expression
     def multiplicative_expression(self):
-        return self._binary_expression('primary_expression', 'MULTILPICATIVE_OPERATOR')
+        return self._binary_expression('unary_expression', 'MULTILPICATIVE_OPERATOR')
 
 
+    # ------------------------Error ----------------------------------------------------------`
     # Primary Expression
+    # This is the method causing the error, If I uncomment the line then then there is Infinite Recursion Error
     def primary_expression(self):
         if (self._is_literal(self._lookahead['type'])): return self.literal()
         if (self._lookahead['type'] == '('): return self.parenthesized_expression()
-        else: return self.left_hand_side_expression()
+        elif (self._lookahead['type'] == 'IDENTIFER'): return self.identifer()
+        # else: return self.left_hand_side_expression()          This is the line is included Lecture but i think this line causing the error
 
+    # ------------------------------------------------------------------------------------------
 
     # Parenthesized Expression
     def parenthesized_expression(self):
@@ -251,6 +255,19 @@ class my_parser:
         _expression = self.expression()
         self._eat(')')
         return _expression
+
+
+    def unary_expression(self):
+        operator = None
+        if (self._lookahead['type'] == 'ADDITIVE_OPERATOR'):
+            operator = self._eat('ADDITIVE_OPERATOR')['value']
+        elif (self._lookahead['type'] == 'LOGICAL_NOT'):
+            operator = self._eat('LOGICAL_NOT')['value']
+
+        if (operator != None):
+            return {'type' :'UnaryExpression', 'operator':operator, 'argument': self.unary_expression() }
+        
+        return self.left_hand_side_expression()
 
 
     # Check literal
