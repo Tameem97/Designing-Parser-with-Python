@@ -45,8 +45,8 @@ spec = [
     [r"^[><]=?", "RELATIONAL_OPERATOR"],
 
     # logical operators
-    [r"^\|\|", "LOGICAL_AND"],
-    [r"^&&", "LOGICAL_OR"],
+    [r"^\|\|", "LOGICAL_OR"],
+    [r"^&&", "LOGICAL_AND"],
     [r"^!", "LOGICAL_NOT"],
 
     # Symbols
