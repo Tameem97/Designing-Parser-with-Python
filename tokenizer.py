@@ -27,6 +27,9 @@ spec = [
     [r"^\bTrue\b", "True"],
     [r"^\bFalse\b", "False"],
     [r"^\bNone\b", "None"],
+    [r"^\bwhile\b", "while"],
+    [r"^\bdo\b", "do"],
+    [r"^\bfor\b", "for"],
 
     # Numbers
     [r"^\d+", "NUMBER"],
