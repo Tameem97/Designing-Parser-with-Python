@@ -92,9 +92,17 @@ class my_parser:
             return self.block_statement()
         elif (self._lookahead.get('type') == 'let' ):
             return self.variable_statement()
+        elif (self._lookahead.get('type') == 'while' or self._lookahead.get('type') == 'for' or (self._lookahead.get('type') == 'do' )):
+            return self.iterator_statement()
         else:
             return self.expression_statement()
 
+
+    # Iterator Statement
+    def iterator_statement(self):
+        if (self._lookahead['type'] == 'while'): return self.while_statement()
+        elif (self._lookahead['type'] == 'do'): return self.do_while_statement()
+        elif (self._lookahead['type'] == 'for'): return self.for_statement()
 
     # Statement List
     def statement_list(self, stopLookahead =None):
@@ -135,13 +143,74 @@ class my_parser:
         return {
             'type': 'IfStatement', 'test': test, 'consequent': consequent, 'alternate': alternate
         } 
+    
 
+    # while statement
+    def while_statement(self):
+        self._eat('while')
+
+        self._eat('(')
+        test = self.expression()
+        self._eat(')')
+
+        body = self.statement()
+
+        return {'type': 'WhileStatement', 'test':test, 'body':body}
+
+
+    # do while statement
+    def do_while_statement(self):
+        self._eat('do')
+
+        body = self.statement()
+
+
+        self._eat('while')
+        self._eat('(')
+        test = self.expression()
+        self._eat(')')
+        self._eat(';')
+
+        return {'type': 'DoWhileStatement', 'test':test, 'body':body}
+
+
+    # for statement
+    def for_statement(self):
+        self._eat('for')
+        self._eat('(')
+
+        init = self.for_statement_init() if self._lookahead['type'] != ';' else None
+        self._eat(';')
+
+        test = self.expression() if self._lookahead['type'] != ';' else None
+        self._eat(';')
+
+        update = self.expression() if self._lookahead['type'] != ')' else None
+        self._eat(')')
+
+        body = self.statement()
+
+        return {'type': 'ForStatement', 'init': init, 'test':test, 'update': update, 'body':body}
+
+
+    # for statement initializer
+    def for_statement_init(self):
+        if (self._lookahead['type'] == 'let'):
+            return self.variable_statement_init()
+        return self.expression()
+    
 
     # Variable Statement
     def variable_statement(self):
+        _variable_statement = self.variable_statement_init()
+        self._eat(';')
+        return _variable_statement
+
+
+    # variable statement initializer
+    def variable_statement_init(self):
         self._eat('let')
         declarations = self.variable_declaration_list()
-        self._eat(';')
         return { 'type': 'VariableStatement', 'declarations':declarations}
 
 
@@ -245,6 +314,7 @@ class my_parser:
         return _expression
 
 
+    # Unary Expression
     def unary_expression(self):
         operator = None
         if (self._lookahead['type'] == 'ADDITIVE_OPERATOR'):
