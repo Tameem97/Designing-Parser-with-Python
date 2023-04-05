@@ -3,13 +3,6 @@ import re
 
 # Tokens Specifications
 spec = [ 
-    # Numbers
-    [r"^\d+", "NUMBER"],
-
-    # Strings
-    [r"\"[^\"]*\"", "STRING"],
-    [r"\'[^\"]*\'", "STRING"],
-
     # White Spaces
     [r"^\s+", None],
 
@@ -19,12 +12,13 @@ spec = [
     # Multi-Line Comments
     [r"^/\*[\s\S]*?\*/", None],
 
-    # Equality Operator
-    [r"^[=!]=", "EQUALITY_OPERATOR"],
-
-    # Binary Operators
-    [r"^[+\-]", "ADDITIVE_OPERATOR"],
-    [r"^[*\/]", "ADDITIVE_OPERATOR"],
+    # Symbols
+    [r"^;", ";"],
+    [r"^\{", "{"],
+    [r"^\}", "}"],
+    [r"^\(", "("],
+    [r"^\)", ")"],
+    [r"^\,", ","],
 
     # Keywords
     [r"^\blet\b", "let"],
@@ -34,14 +28,25 @@ spec = [
     [r"^\bFalse\b", "False"],
     [r"^\bNone\b", "None"],
 
+    # Numbers
+    [r"^\d+", "NUMBER"],
+
     # Identifiers
     [r"^\w+", "IDENTIFIER"],
+
+    # Equality Operator
+    [r"^[=!]=", "EQUALITY_OPERATOR"],
 
     # Assignment Operators
     [r"^=", "SIMPLE_ASSIGN"],
 
     # Operators
     [r"^[\*\/\+\-]=", "COMPLEX_ASSIGN"],
+
+    # Binary Operators
+    [r"^[+\-]", "ADDITIVE_OPERATOR"],
+    [r"^[*\/]", "MULTIPLICATIVE_OPERATOR"],
+
     [r"^[><]=?", "RELATIONAL_OPERATOR"],
 
     # logical operators
@@ -49,13 +54,9 @@ spec = [
     [r"^&&", "LOGICAL_AND"],
     [r"^!", "LOGICAL_NOT"],
 
-    # Symbols
-    [r"^\;", ";"],
-    [r"^\{", "{"],
-    [r"^\}", "}"],
-    [r"^\(", "("],
-    [r"^\)", ")"],
-    [r"^\,", ","]
+    # Strings
+    [r"\"[^\"]*\"", "STRING"],
+    [r"\'[^\"]*\'", "STRING"]
 ]
 
 
@@ -69,13 +70,12 @@ class Tokenizer:
     # Initializer Method
     def init(self, string):
         self._string = string
-        self._cursor = 0;
+        self._cursor = 0
 
 
     # obtain next token
     def getNextToken(self):
-        if (not self.hasMoreTokens()):
-            return None
+        if (not self.hasMoreTokens()):  return None
         
         string = self._string[self._cursor:]
 
@@ -97,9 +97,14 @@ class Tokenizer:
 
     # Match Regular Expression
     def _match(self, regexp, string):
-        matched = re.match(regexp, string)
+        matched = re.search(regexp, string)     # match is alternative
         if (matched):
             self._cursor += len(matched[0])
             return matched[0]
         
         return None
+    
+
+    # Whether the tokenizer reached EOF
+    def isEOF(self):
+        return self._cursor == len(self._string)
