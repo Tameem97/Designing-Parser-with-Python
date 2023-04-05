@@ -92,11 +92,49 @@ class my_parser:
             return self.block_statement()
         elif (self._lookahead.get('type') == 'let' ):
             return self.variable_statement()
+        elif (self._lookahead.get('type') == 'def' ):
+            return self.function_declaration()
+        elif (self._lookahead.get('type') == 'return' ):
+            return self.return_statement()
         elif (self._lookahead.get('type') == 'while' or self._lookahead.get('type') == 'for' or (self._lookahead.get('type') == 'do' )):
             return self.iterator_statement()
         else:
             return self.expression_statement()
 
+
+    # function declaration
+    def function_declaration(self):
+        self._eat('def')
+        name = self.identifer()
+
+        self._eat('(')
+        params = self.formal_parameter_list() if self._lookahead['type'] != ')' else [] 
+        self._eat(')')
+
+        body = self.block_statement()
+
+        return {'type': 'FunctionDeclaration', 'name':name, 'params': params, 'body':body}
+
+
+    # Formal Parameter List
+    def formal_parameter_list(self):
+        params = []
+        params.append(self.identifer())
+
+        while (self._lookahead['type'] == ',' and self._eat(',')):
+            params.append(self.identifer())
+
+        return params
+
+
+    # return statement
+    def return_statement(self):
+        self._eat('return')
+        argument = self.expression() if self._lookahead['type'] != ';' else None
+        self._eat(';')
+        return {
+            'type': 'ReturnStatement', 'argument': argument
+        }
 
     # Iterator Statement
     def iterator_statement(self):
@@ -124,7 +162,34 @@ class my_parser:
 
     # Left Hand Side Expression
     def left_hand_side_expression(self):
-        return self.primary_expression()
+        return self.call_member_expression()
+
+
+    # Call Member Expression
+    def call_member_expression(self):
+        member = self.member_expression()
+        if (self._lookahead['type'] == '('):
+            return self._call_expression(member)
+        
+        return member
+
+    # Member Expression 
+    def member_expression(self):
+        _object = self.primary_expression()
+        while (self._lookahead['type'] == '.' or self._lookahead['type'] == '['):
+            if (self._lookahead['type'] == '.'):
+                self._eat('.')
+                property = self.identifer()
+                _object = {'type': 'MemberExpression', 'computed': False, 'object': _object, 'property': property}
+
+
+            if (self._lookahead['type'] == '['):
+                self._eat('[')
+                property = self.expression()
+                self._eat(']')
+                _object = {'type': 'MemberExpression', 'computed': True, 'object': _object, 'property': property}
+
+        return _object
 
 
     # IF-ELSE Expression
@@ -363,7 +428,7 @@ class my_parser:
 
     # Valid Assignment Check
     def _check_valid_asignment_target(self, node):
-        if (node['type']=='Identifer'): return node
+        if (node['type']=='Identifer' or node['type'] == 'MemberExpression'): return node
 
         raise SyntaxError('Invalid left hand assignment expression')
 
@@ -371,6 +436,37 @@ class my_parser:
     # Assignment Operator Check
     def _is_assignment_operator(self, tokenType):
         return tokenType == 'SIMPLE_ASSIGN' or tokenType == 'COMPLEX_ASSIGN'
+
+
+    # Call Expression Helper
+    def _call_expression(self, callee):
+        callExpression = {
+            'type': 'CallExpression', 'callee':callee, 'arguments':self.arguments()
+        }
+
+        if (self._lookahead['type'] == '('):
+            callExpression = self._call_expression(callExpression)
+
+        return callExpression
+    
+
+    # Arguments
+    def arguments(self):
+        self._eat('(')
+        argumentsList = self.arguments_list() if self._lookahead['type'] != ')' else []
+        self._eat(')')
+        return argumentsList
+
+
+    # Argument List
+    def arguments_list(self):
+        _argument_list = []
+
+        _argument_list.append(self.assignment_expression())
+        while (self._lookahead['type'] == ',' and self._eat(',')):
+            _argument_list.append(self.assignment_expression())
+
+        return _argument_list
 
 
     # Expects a token of given type
