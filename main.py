@@ -7,6 +7,7 @@ import os
 # Recursive Decent Parser
 rParser = my_parser()
 
+os.system("clear")
 
 mode = None
 print_ast = False
@@ -14,12 +15,12 @@ raw_string = ""
 _dir = os.listdir("./Tests")
 
 
-if "--t" in sys.argv: mode = "-test"
-if "--p" in sys.argv: print_ast = True
-if ("--t" not in sys.argv and len(sys.argv)>=2): mode = "-file"
+if "-t" in sys.argv: mode = "--test"
+if "-p" in sys.argv: print_ast = True
+if ("-t" not in sys.argv and len(sys.argv)>=2): mode = "--file"
 
 
-if (mode=='-test'):
+if (mode=='--test'):
     # Run Tests in the directory
     for i in _dir:
         read_file = open("./Tests/"+i, "r")
@@ -33,7 +34,7 @@ if (mode=='-test'):
         
     print("\nAll Tests Passed...\nTotal Tests:", len(_dir))
 
-elif (mode == "-file"):
+elif (mode == "--file"):
     # Execute the file
     read_file = open(sys.argv[-1], "r")
     parse_ast = rParser.parse(read_file.read())
