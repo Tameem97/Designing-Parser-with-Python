@@ -19,6 +19,9 @@ spec = [
     [r"^\(", "("],
     [r"^\)", ")"],
     [r"^\,", ","],
+    [r"^\.", "."],
+    [r"^\[", "["],
+    [r"^\]", "]"],
 
     # Keywords
     [r"^\blet\b", "let"],
@@ -30,6 +33,13 @@ spec = [
     [r"^\bwhile\b", "while"],
     [r"^\bdo\b", "do"],
     [r"^\bfor\b", "for"],
+    [r"^\bdef\b", "def"],
+    [r"^\breturn\b", "return"],
+    [r"^\bclass\b", "class"],
+    [r"^\bextends\b", "extends"],
+    [r"^\bsuper\b", "super"],
+    [r"^\bnew\b", "new"],
+    [r"^\bthis\b", "this"],
 
     # Numbers
     [r"^\d+", "NUMBER"],
