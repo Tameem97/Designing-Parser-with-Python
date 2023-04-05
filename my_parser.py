@@ -96,10 +96,30 @@ class my_parser:
             return self.function_declaration()
         elif (self._lookahead.get('type') == 'return' ):
             return self.return_statement()
+        elif (self._lookahead.get('type') == 'class' ):
+            return self.class_declaration()
         elif (self._lookahead.get('type') == 'while' or self._lookahead.get('type') == 'for' or (self._lookahead.get('type') == 'do' )):
             return self.iterator_statement()
         else:
             return self.expression_statement()
+
+
+    # Class Declaration
+    def class_declaration(self):
+        self._eat('class')
+        id = self.identifer()
+
+        superClass = self.class_extends() if self._lookahead['type'] == 'extends' else None
+
+        body = self.block_statement()
+
+        return {'type': 'ClassDeclaration', 'id':id, 'superClass':superClass, 'body':body}
+    
+
+    # class extends
+    def class_extends(self):
+        self._eat('extends')
+        return self.identifer()
 
 
     # function declaration
@@ -157,7 +177,17 @@ class my_parser:
         if (self._is_literal(self._lookahead['type'])): return self.literal()
         if (self._lookahead['type'] == '('): return self.parenthesized_expression()
         elif (self._lookahead['type'] == 'IDENTIFIER'): return self.identifer()
+        elif (self._lookahead['type'] == 'this'): return self.this_expression()
+        elif (self._lookahead['type'] == 'new'): return self.new_expression()
         else: raise SyntaxError(f"Unexpected Primary Expression {self._lookahead}")
+
+
+    # New Expression
+    def new_expression(self):
+        self._eat('new')
+        return {
+            'type': 'NewExpression', 'callee': self.member_expression(), 'arguments': self.arguments()
+        }
 
 
     # Left Hand Side Expression
@@ -167,6 +197,10 @@ class my_parser:
 
     # Call Member Expression
     def call_member_expression(self):
+
+        if (self._lookahead['type'] == 'super'):
+            return self._call_expression(self.super_expression())
+
         member = self.member_expression()
         if (self._lookahead['type'] == '('):
             return self._call_expression(member)
@@ -391,6 +425,18 @@ class my_parser:
             return {'type' :'UnaryExpression', 'operator':operator, 'argument': self.unary_expression() }
         
         return self.left_hand_side_expression()
+
+
+    # This Expression
+    def this_expression(self):
+        self._eat('this')
+        return {'type': 'ThisExpression'}
+
+
+    # This Expression
+    def super_expression(self):
+        self._eat('super')
+        return {'type': 'Super'}
 
 
     # Check literal
