@@ -23,6 +23,11 @@ class my_parser:
 
 
     # main entry point
+    '''
+       Program
+          : StatementList
+          ;
+    '''
     def program(self):
         return { 'type': 'Program', 
                   'body': self.statement_list() }
@@ -65,14 +70,16 @@ class my_parser:
         return {'type': 'NullLiteral', 'value': None}
 
 
-    # Statement List
-    def statement_list(self, stopLookahead =None):
-        _statement_list = [self.statement()]
+    # Expression
+    def expression(self):
+        return self.assignment_expression()
 
-        while (self._lookahead != None and self._lookahead['type'] != stopLookahead):
-            _statement_list.append(self.statement())
 
-        return _statement_list
+    # Expression Statement
+    def expression_statement(self):
+        _expression = self.expression()
+        self._eat(';')
+        return {'type': 'ExpressionStatement', 'expression':_expression}
 
 
     # Statement
@@ -85,8 +92,31 @@ class my_parser:
             return self.block_statement()
         elif (self._lookahead.get('type') == 'let' ):
             return self.variable_statement()
+        else:
+            return self.expression_statement()
 
-        return self.expression_statement()
+
+    # Statement List
+    def statement_list(self, stopLookahead =None):
+        _statement_list = [self.statement()]
+
+        while (self._lookahead != None and self._lookahead['type'] != stopLookahead):
+            _statement_list.append(self.statement())
+
+        return _statement_list
+
+
+    # Primary Expression
+    def primary_expression(self):
+        if (self._is_literal(self._lookahead['type'])): return self.literal()
+        if (self._lookahead['type'] == '('): return self.parenthesized_expression()
+        elif (self._lookahead['type'] == 'IDENTIFIER'): return self.identifer()
+        else: raise SyntaxError(f"Unexpected Primary Expression {self._lookahead}")
+
+
+    # Left Hand Side Expression
+    def left_hand_side_expression(self):
+        return self.primary_expression()
 
 
     # IF-ELSE Expression
@@ -115,13 +145,12 @@ class my_parser:
         return { 'type': 'VariableStatement', 'declarations':declarations}
 
 
-    # Variable Declaratiuon List
+    # Variable Declaration List
     def variable_declaration_list(self):
         declarations = []
         declarations.append(self.variable_declaration())
 
-        while (self._lookahead['type'] == ','):
-            self._eat(',')
+        while (self._lookahead['type'] == ',' and self._eat(',')):
             declarations.append(self.variable_declaration())
 
         return declarations
@@ -130,20 +159,14 @@ class my_parser:
     # Variable Declaration
     def variable_declaration(self):
         id = self.identifer()
-        init = self.variable_initializer() if self._lookahead['type'] != ';' and self._lookahead['type'] != ',' else None
+        init = self.variable_initializer() if (self._lookahead['type'] != ';' and self._lookahead['type'] != ',') else None
         return {'type': 'VariableDeclaration', 'id':id, 'init':init}
 
 
+    # Variable Initializer
     def variable_initializer(self):
         self._eat('SIMPLE_ASSIGN')
         return self.assignment_expression()
-
-
-    # Expression Statement
-    def expression_statement(self):
-        _expression = self.expression()
-        self._eat(';')
-        return {'type': 'ExpressionStatement', 'expression':_expression}
     
 
     # Block Statement
@@ -158,11 +181,6 @@ class my_parser:
     def empty_statement(self):
         self._eat(';')
         return {'type': 'EmptyStatement'}
-
-
-    # Expression
-    def expression(self):
-        return self.assignment_expression()
     
 
     # Assignment Expression
@@ -171,10 +189,8 @@ class my_parser:
 
         if (not self._is_assignment_operator(self._lookahead['type'])): return left
 
-        left = self._check_valid_asignment_target(left)
-
         return {'type': 'AssignmentExpression', 'operator': self.assignment_operator()['value'],
-                'left':left,
+                'left': self._check_valid_asignment_target(left),
                 'right': self.assignment_expression()}
 
 
@@ -204,28 +220,11 @@ class my_parser:
         return self._binary_expression('additive_expression',  'RELATIONAL_OPERATOR')
 
 
-    # Assignment Operator Check
-    def _is_assignment_operator(self, tokenType):
-        return tokenType == 'SIMPLE_ASSIGN' or tokenType == 'COMPLEX_ASSIGN'
-
-
-    # Left Hand Side Expression
-    def left_hand_side_expression(self):
-        return self.primary_expression()
-
-
     # Identifer
     def identifer(self):
         name = self._eat('IDENTIFIER')['value']
         return {'type': 'Identifer',
                 'name': name}
-
-
-    # Valid Assignment Check
-    def _check_valid_asignment_target(self, node):
-        if (node['type']=='Identifer'): return node
-
-        raise SyntaxError('Invalid left hand assignment expression')
 
 
     # Additive Expression
@@ -235,19 +234,8 @@ class my_parser:
 
     # Multiplicative Expression
     def multiplicative_expression(self):
-        return self._binary_expression('unary_expression', 'MULTILPICATIVE_OPERATOR')
+        return self._binary_expression('unary_expression', 'MULTIPLICATIVE_OPERATOR')
 
-
-    # ------------------------Error ----------------------------------------------------------`
-    # Primary Expression
-    # This is the method causing the error, If I uncomment the line then then there is Infinite Recursion Error
-    def primary_expression(self):
-        if (self._is_literal(self._lookahead['type'])): return self.literal()
-        if (self._lookahead['type'] == '('): return self.parenthesized_expression()
-        elif (self._lookahead['type'] == 'IDENTIFER'): return self.identifer()
-        # else: return self.left_hand_side_expression()          This is the line is included Lecture but i think this line causing the error
-
-    # ------------------------------------------------------------------------------------------
 
     # Parenthesized Expression
     def parenthesized_expression(self):
@@ -301,6 +289,18 @@ class my_parser:
                     'operator': operator, 'left': left, 'right': right}
             
         return left
+
+
+    # Valid Assignment Check
+    def _check_valid_asignment_target(self, node):
+        if (node['type']=='Identifer'): return node
+
+        raise SyntaxError('Invalid left hand assignment expression')
+
+
+    # Assignment Operator Check
+    def _is_assignment_operator(self, tokenType):
+        return tokenType == 'SIMPLE_ASSIGN' or tokenType == 'COMPLEX_ASSIGN'
 
 
     # Expects a token of given type
